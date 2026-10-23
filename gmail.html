@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>作業一 Gmail 自動讀寫</title>
+<meta name="description" content="以 16 字元應用程式密碼實作 Gmail IMAP 讀信與 SMTP 寄信的作業說明">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="inner">
+  <a class="brand" href="index.html">課程作業</a>
+  <nav><a href="gmail.html">作業一 Gmail</a> &nbsp;·&nbsp; <a href="qrcode.html">作業二 QR Code</a></nav>
+</div></header>
+
+<main>
+  <h1>作業一：Gmail 自動讀寫程式</h1>
+  <p class="subtitle">16 字元應用程式密碼認證 · IMAP 讀信 · SMTP 寄信</p>
+
+  <div class="card toc">
+    <a href="#goal">一、作業目標</a> · <a href="#prep">二、前置準備</a> · <a href="#func">三、程式功能要求</a> ·
+    <a href="#report">四、報告要求</a> · <a href="#submit">五、繳交內容</a> · <a href="#grade">六、評分標準</a> · <a href="#notes">七、注意事項</a>
+  </div>
+
+  <h2 id="goal">一、作業目標</h2>
+  <p>撰寫一支 Python 程式，使用 Google 帳戶的 <strong>16 字元應用程式密碼</strong> 登入 Gmail，透過 <strong>IMAP 自動讀取信件</strong>、透過 <strong>SMTP 自動寄送信件</strong>，並實際執行後撰寫報告。</p>
+  <p>課程提供 <a href="downloads/gmail_auto.py" download>gmail_auto.py</a> 作為範例，同學可以直接執行、修改，或參考其寫法自行重寫。</p>
+
+  <h2 id="prep">二、前置準備</h2>
+  <ol>
+    <li>準備一個 Gmail 帳號（建議用測試用帳號，不要用個人主要帳號）。</li>
+    <li>Google 帳戶 → 安全性 → 開啟「兩步驟驗證」。</li>
+    <li>在搜尋列輸入「應用程式密碼」→ 建立 → 取得 16 字元密碼（例如 <code>abcd efgh ijkl mnop</code>）。</li>
+    <li>下載 <a href="downloads/config.example.json" download>config.example.json</a>，複製成 <code>config.json</code>，填入帳號與應用程式密碼。
+      <div class="warn" style="margin-top:8px"><strong>config.json 不可繳交、不可上傳、不可貼在報告中。</strong></div></li>
+    <li>執行測試：
+<pre><code>python gmail_auto.py selftest
+python gmail_auto.py read --limit 5
+python gmail_auto.py send --to 同學@gmail.com --subject "測試" --body "你好"</code></pre></li>
+  </ol>
+  <div class="note">每次執行都會在 <code>results/</code> 目錄留下 <code>run_日期時間.md</code> 與 <code>.json</code>，裡面是這次執行的真實結果，寫報告時直接引用。</div>
+
+  <h2 id="func">三、程式功能要求</h2>
+  <div class="table-wrap"><table>
+    <tr><th>編號</th><th>要求</th><th>必要 / 加分</th></tr>
+    <tr><td>F1</td><td>以應用程式密碼登入 IMAP（imap.gmail.com:993）並讀取收件匣最新 N 封信，印出日期、寄件者、主旨</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F2</td><td>以應用程式密碼登入 SMTP（smtp.gmail.com:465）寄出一封信給指定收件者</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F3</td><td>寄信後再讀信，驗證寄出的信確實收到</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F4</td><td>帳號密碼不得寫死在程式碼中，須由設定檔或環境變數讀取</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F5</td><td>登入失敗、網路錯誤時要有清楚的錯誤訊息，程式不可直接崩潰</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F6</td><td>只讀未讀信 / 指定日期之後 / 指定主旨關鍵字等篩選條件</td><td><span class="tag plus">加分</span></td></tr>
+    <tr><td>F7</td><td>寄送附件、自動回覆、或將信件存成檔案等延伸功能</td><td><span class="tag plus">加分</span></td></tr>
+  </table></div>
+
+  <h2 id="report">四、報告要求</h2>
+  <p><strong>報告使用 Word、PDF 或 Markdown 皆可，必須包含以下三部分，缺一項即扣分。</strong></p>
+
+  <h3>1. 報告題目</h3>
+  <p>自訂一個能表達本次作業內容的題目，例如：「以應用程式密碼實作 Gmail 自動收發信程式」。不可直接寫「作業一」或「Gmail 報告」。</p>
+
+  <h3>2. 目的</h3>
+  <p>說明這支程式要解決什麼問題、為什麼要用應用程式密碼而不是一般登入密碼，以及預期達成的效果。建議 100 到 200 字。</p>
+
+  <h3>3. 報告內容項目（全部必須依實際執行結果撰寫）</h3>
+  <div class="warn">以下每一項都要有自己實際跑出來的證據（執行畫面截圖，或 <code>results/</code> 紀錄檔內容）。<strong>抄範例、憑想像寫的結果一律不計分。</strong></div>
+  <div class="table-wrap"><table>
+    <tr><th style="width:28%">項目</th><th>必須包含的內容</th></tr>
+    <tr><td>3.1 執行環境</td><td>作業系統、Python 版本、使用的套件、測試用 Gmail 帳號（可部分遮蔽，如 abc***@gmail.com）</td></tr>
+    <tr><td>3.2 認證設定過程</td><td>開啟兩步驟驗證與建立應用程式密碼的步驟截圖，<span class="danger">密碼本身必須遮蔽</span></td></tr>
+    <tr><td>3.3 程式架構說明</td><td>程式分成哪幾個部分、各部分做什麼、用到哪些函式庫（imaplib、smtplib、email 等）</td></tr>
+    <tr><td>3.4 讀信結果</td><td>實際讀到的信件清單截圖或表格（日期、寄件者、主旨），並說明信箱總數與讀取筆數</td></tr>
+    <tr><td>3.5 寄信結果</td><td>寄出的收件者、主旨、時間，並附上收件端實際收到的截圖</td></tr>
+    <tr><td>3.6 寄送後驗證</td><td>寄出後再讀信，是否有讀到剛寄的那封，花了多久</td></tr>
+    <tr><td>3.7 錯誤與排除</td><td>過程中實際遇到的錯誤（例如 535 認證失敗、IMAP 未啟用、連線逾時）、原因與解法。若完全沒遇到錯誤，請故意輸錯密碼測一次並記錄程式的反應</td></tr>
+    <tr><td>3.8 結論與心得</td><td>程式是否達成目的、哪裡可以改進、學到什麼</td></tr>
+  </table></div>
+
+  <h2 id="submit">五、繳交內容</h2>
+  <ol>
+    <li>程式原始碼（<code>.py</code> 檔，<strong>不含</strong> config.json 與任何密碼）</li>
+    <li>報告檔（Word / PDF / Markdown）</li>
+    <li><code>results/</code> 目錄中至少一次成功執行的紀錄檔</li>
+  </ol>
+  <p>壓縮成一個檔案，檔名：<code>學號_姓名_gmail作業.zip</code></p>
+
+  <h2 id="grade">六、評分標準</h2>
+  <div class="table-wrap"><table>
+    <tr><th>項目</th><th style="width:20%">配分</th></tr>
+    <tr><td>程式功能 F1 到 F5</td><td>40</td></tr>
+    <tr><td>報告題目與目的清楚</td><td>10</td></tr>
+    <tr><td>報告內容項目 3.1 到 3.8 完整且為實際結果</td><td>40</td></tr>
+    <tr><td>程式碼可讀性、註解、不含密碼</td><td>10</td></tr>
+    <tr><td>加分功能 F6 / F7</td><td>最多 +10</td></tr>
+  </table></div>
+
+  <h2 id="notes">七、注意事項</h2>
+  <ul>
+    <li>應用程式密碼等同帳號密碼，<span class="danger"><strong>絕對不可</strong></span>出現在程式碼、報告、截圖或任何繳交檔案中。</li>
+    <li>作業完成後建議到 Google 帳戶刪除該應用程式密碼。</li>
+    <li>寄信測試請寄給自己或同組同學，不要對外亂寄。</li>
+  </ul>
+
+  <p style="margin-top:30px">
+    <a class="btn secondary" href="downloads/gmail_auto.py" download>下載 gmail_auto.py</a>
+    <a class="btn secondary" href="downloads/config.example.json" download>下載 config.example.json</a>
+    <a class="btn secondary" href="downloads/作業說明.docx" download>下載 Word 版說明</a>
+  </p>
+</main>
+<footer><a href="index.html">回首頁</a> · <a href="qrcode.html">作業二：用 QR Code 導引到網頁</a></footer>
+</body>
+</html>

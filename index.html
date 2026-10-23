@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>課程作業</title>
+<meta name="description" content="Python 自動化課程作業：Gmail 自動讀寫、QR Code 導引到網頁">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="inner">
+  <a class="brand" href="index.html">課程作業</a>
+  <nav><a href="gmail.html">作業一 Gmail</a> &nbsp;·&nbsp; <a href="qrcode.html">作業二 QR Code</a></nav>
+</div></header>
+
+<main>
+  <h1>Python 自動化課程作業</h1>
+  <p class="subtitle">兩份作業都要交程式與報告。報告必須包含「報告題目、目的、報告內容項目」，內容項目一律依實際執行結果撰寫。</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3 style="margin-top:0">作業一：Gmail 自動讀寫程式</h3>
+      <p>用 Google 帳戶的 16 字元應用程式密碼登入 Gmail，透過 IMAP 自動讀信、SMTP 自動寄信，並驗證寄出的信確實收到。</p>
+      <a class="btn" href="gmail.html">看作業說明</a>
+      <a class="btn secondary" href="downloads/gmail_auto.py" download>下載範例程式</a>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">作業二：用 QR Code 導引到網頁</h3>
+      <p>把網址做成 QR Code 圖片，自己架一個網頁讓手機掃描進入，並記錄每一次掃描連線。</p>
+      <a class="btn" href="qrcode.html">看作業說明</a>
+      <a class="btn secondary" href="downloads/qr_web.py" download>下載範例程式</a>
+    </div>
+  </div>
+
+  <h2>報告共同規定</h2>
+  <div class="card">
+    <ol>
+      <li><strong>報告題目</strong>：自訂一個能表達作業內容的題目，不可只寫「作業一」。</li>
+      <li><strong>目的</strong>：說明程式要解決什麼問題、預期達成什麼效果，100 到 200 字。</li>
+      <li><strong>報告內容項目</strong>：每一項都要附上自己實際執行的證據（截圖或程式產生的紀錄檔）。抄範例、憑想像寫的結果一律不計分。</li>
+    </ol>
+    <p>範例程式每次執行都會在 <code>results/</code> 目錄留下這次的真實結果（Markdown 與 JSON），寫報告時直接引用即可。</p>
+  </div>
+
+  <h2>下載</h2>
+  <div class="table-wrap"><table>
+    <tr><th>檔案</th><th>說明</th></tr>
+    <tr><td><a href="downloads/gmail_auto.py" download>gmail_auto.py</a></td><td>作業一範例程式（只用 Python 標準函式庫）</td></tr>
+    <tr><td><a href="downloads/config.example.json" download>config.example.json</a></td><td>作業一設定檔範本，複製成 config.json 後填入帳號與應用程式密碼</td></tr>
+    <tr><td><a href="downloads/qr_web.py" download>qr_web.py</a></td><td>作業二範例程式（需 qrcode、opencv-python-headless）</td></tr>
+    <tr><td><a href="downloads/作業說明.docx" download>作業說明.docx</a> / <a href="downloads/作業說明.md" download>.md</a></td><td>作業一說明文件</td></tr>
+    <tr><td><a href="downloads/作業說明_QRCode.docx" download>作業說明_QRCode.docx</a> / <a href="downloads/作業說明_QRCode.md" download>.md</a></td><td>作業二說明文件</td></tr>
+  </table></div>
+
+  <h2>掃描進入本頁</h2>
+  <div class="card qr">
+    <img src="qr_site.png" alt="指向 https://sglin7222.github.io/ 的 QR Code">
+    <p>這張 QR Code 就是用作業二的範例程式產生的，指向 <code>https://sglin7222.github.io/</code>。</p>
+  </div>
+</main>
+<footer>Python 自動化課程作業 · 範例程式與說明以 Python 3.12 測試</footer>
+</body>
+</html>
