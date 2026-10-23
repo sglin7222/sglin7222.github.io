@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>海大餐廳 候位</title>
+<meta name="description" content="海大餐廳線上候位：掃 QR Code 填資料取號，輪到時自動寄 E-mail 通知">
+<link rel="stylesheet" href="waitlist.css">
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title">海大餐廳 線上候位</h1>
+  <p class="sub">目前候位 <b id="count">…</b> 組</p>
+
+  <div id="demo-banner" class="banner" hidden>示範模式：尚未設定後端網址，資料只存在這台瀏覽器。</div>
+
+  <!-- 候位表單 -->
+  <form id="form" class="card" hidden>
+    <label for="name">姓名</label>
+    <input id="name" name="name" required maxlength="30" placeholder="王小明" autocomplete="name">
+    <label for="gender">性別</label>
+    <select id="gender" name="gender"><option>男</option><option>女</option><option>其他</option></select>
+    <label for="email">E-mail（輪到時會寄通知）</label>
+    <input id="email" name="email" type="email" required placeholder="you@example.com" autocomplete="email">
+    <label for="party">人數</label>
+    <select id="party" name="party_size"></select>
+    <p id="form-error" class="err" hidden></p>
+    <p class="actions"><button class="btn" type="submit" id="submit">加入候位</button></p>
+  </form>
+
+  <!-- 候位票 -->
+  <div id="ticket" class="card" hidden>
+    <p class="muted center" id="t-name"></p>
+    <div class="big" id="t-id"></div>
+    <p class="num" id="t-ahead"></p>
+    <p class="center"><span class="tag" id="t-status"></span></p>
+    <p class="muted center" id="t-info"></p>
+    <p class="actions center">
+      <button class="btn red" type="button" id="leave">取消候位</button>
+      <button class="btn grey" type="button" id="new" hidden>重新候位</button>
+    </p>
+  </div>
+
+  <p class="muted center">輪到時會寄信到您填的 E-mail，此頁每 5 秒自動更新。<br><a href="staff.html">員工入口</a></p>
+</div>
+
+<script src="app.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  document.title = RESTAURANT + " 候位";
+  $("title").textContent = RESTAURANT + " 線上候位";
+  for (let n = 1; n <= 10; n++) $("party").insertAdjacentHTML("beforeend", `<option>${n}</option>`);
+  showDemoBanner();
+
+  const getTicket = () => { try { return localStorage.getItem("waitlist_ticket"); } catch (e) { return null; } };
+  const setTicket = id => { try { id ? localStorage.setItem("waitlist_ticket", id) : localStorage.removeItem("waitlist_ticket"); } catch (e) {} };
+
+  async function refreshCount() {
+    try { const d = await api("count"); $("count").textContent = d.waiting; } catch (e) { $("count").textContent = "?"; }
+  }
+
+  async function showTicket(id) {
+    let d;
+    try { d = await api("status", { id }); } catch (e) { d = { error: e.message }; }
+    if (d.error) { setTicket(null); showForm(); return; }
+    $("form").hidden = true; $("ticket").hidden = false;
+    $("t-name").textContent = d.name + "，您的候位號碼";
+    $("t-id").textContent = d.id;
+    $("t-status").textContent = STATUS_TEXT[d.status] || d.status;
+    $("t-status").className = "tag " + d.status;
+    $("t-info").textContent = `候位時間 ${d.created_at}　${d.party_size} 位`;
+    $("count").textContent = d.waiting;
+    const active = ACTIVE.includes(d.status);
+    $("t-ahead").textContent = d.status === "notified" ? "輪到您了！請至櫃台報到" : active ? `前面還有 ${d.ahead} 組` : STATUS_TEXT[d.status];
+    $("leave").hidden = !active; $("new").hidden = active;
+  }
+
+  function showForm() { $("ticket").hidden = true; $("form").hidden = false; }
+
+  $("form").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    $("submit").disabled = true; $("form-error").hidden = true;
+    try {
+      const d = await api("join", { name: $("name").value.trim(), gender: $("gender").value, email: $("email").value.trim(), party_size: $("party").value });
+      if (d.error) throw new Error(d.error);
+      setTicket(d.id); await showTicket(d.id);
+    } catch (e) { $("form-error").textContent = e.message; $("form-error").hidden = false; }
+    $("submit").disabled = false;
+  });
+
+  $("leave").addEventListener("click", async () => {
+    if (!confirm("確定取消候位？")) return;
+    await api("leave", { id: getTicket() }); await showTicket(getTicket());
+  });
+  $("new").addEventListener("click", () => { setTicket(null); showForm(); refreshCount(); });
+
+  const id = getTicket();
+  if (id) showTicket(id); else showForm();
+  refreshCount();
+  setInterval(() => { const t = getTicket(); t ? showTicket(t) : refreshCount(); }, 5000);
+})();
+</script>
+</body>
+</html>

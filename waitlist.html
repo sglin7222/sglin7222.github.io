@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>作業三 餐廳候位系統</title>
+<meta name="description" content="以 GitHub Pages 與 Google Apps Script 實作海大餐廳線上候位系統，Queue 自己寫，不用資料庫">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="inner">
+  <a class="brand" href="index.html">課程作業</a>
+  <nav><a href="gmail.html">作業一 Gmail</a> &nbsp;·&nbsp; <a href="qrcode.html">作業二 QR Code</a> &nbsp;·&nbsp; <a href="waitlist.html">作業三 候位系統</a></nav>
+</div></header>
+
+<main>
+  <h1>作業三：海大餐廳候位系統</h1>
+  <p class="subtitle">GitHub Pages 前端 · Google Apps Script 後端 · Queue 自己寫 · Gmail 自動通知 · 不用架伺服器、不用資料庫、不用安裝套件</p>
+
+  <div class="card toc">
+    <a href="#goal">一、作業目標</a> · <a href="#plan">二、系統規劃</a> · <a href="#deploy">三、部署步驟</a> · <a href="#func">四、程式功能要求</a> ·
+    <a href="#report">五、報告要求</a> · <a href="#submit">六、繳交內容</a> · <a href="#grade">七、評分標準</a> · <a href="#notes">八、注意事項</a>
+  </div>
+
+  <div class="note">
+    <strong>先玩玩看：</strong><a href="waitlist/index.html" target="_blank">顧客候位頁</a> 與 <a href="waitlist/staff.html" target="_blank">員工管理頁</a>（示範模式，資料只存在你的瀏覽器，員工密碼 <code>staff</code>）。
+  </div>
+
+  <h2 id="goal">一、作業目標</h2>
+  <p>整合作業一（Gmail 自動寄信）與作業二（QR Code 導引網頁），做出一套<strong>直接放在 GitHub 上運作</strong>的餐廳線上候位系統，不需要在電腦上架伺服器、不需要安裝任何套件、不需要資料庫，<strong>候位 Queue 自己寫</strong>：</p>
+  <ul>
+    <li><strong>顧客</strong>掃描餐廳門口的 QR Code 進入候位網頁，填寫姓名、性別、E-mail，取得候位號碼，並隨時看到目前候位組數與自己前面還有幾組。</li>
+    <li><strong>員工</strong>輸入密碼進入管理頁面，看到候位 queue，按「通知」自動寄 E-mail 給輪到的顧客，按「入座」或「取消」將該組移出 queue。</li>
+  </ul>
+  <p>課程提供完整範例（前端 3 個檔案 + 後端 1 個檔案），同學可以直接部署、修改，或參考其寫法自行重寫。</p>
+
+  <h2 id="plan">二、系統規劃</h2>
+  <h3>1. 架構</h3>
+  <p>GitHub Pages 只能放靜態網頁，不能執行程式、存資料或寄信，所以把工作拆成兩邊：</p>
+<pre><code> 顧客手機 / 員工電腦
+        │  瀏覽器開啟網頁
+        ▼
+ GitHub Pages（前端，靜態檔案）
+   waitlist/index.html   顧客候位頁
+   waitlist/staff.html   員工管理頁
+   waitlist/app.js       共用程式，fetch 呼叫後端
+        │  fetch(API_URL)  JSON
+        ▼
+ Google Apps Script 網頁應用程式（後端，Code.gs）
+   ├─ 自己寫的 Queue（JSON 陣列，存在 PropertiesService）
+   └─ MailApp.sendEmail ＝ 用自己的 Gmail 寄候位通知</code></pre>
+  <div class="table-wrap"><table>
+    <tr><th>部分</th><th>放哪裡</th><th>語言</th><th>費用 / 安裝</th></tr>
+    <tr><td>前端網頁</td><td>GitHub Pages（自己的 <code>帳號.github.io</code> 儲存庫）</td><td>HTML / CSS / JavaScript</td><td>免費，不用安裝</td></tr>
+    <tr><td>後端 API 與 Queue</td><td>Google Apps Script，部署成網頁應用程式</td><td>JavaScript</td><td>免費，不用安裝</td></tr>
+    <tr><td>資料存放</td><td>Apps Script 內建 PropertiesService（key-value，存 JSON 字串）</td><td>無</td><td>免費，不用建資料庫</td></tr>
+    <tr><td>寄信</td><td>Apps Script 的 MailApp，從自己的 Gmail 寄出</td><td>無</td><td>免費，每天 100 封</td></tr>
+  </table></div>
+
+  <h3>2. 流程</h3>
+<pre><code>顧客                      GitHub Pages 前端           Apps Script 後端（Queue）            員工
+ │ 掃 QR Code                  │                              │                            │
+ ├────────────────────────────► index.html                    │                            │
+ │                             ├── action=count ─────────────► 回傳 queue 長度             │
+ │ 填姓名/性別/E-mail/人數     │                              │                            │
+ ├────────────────────────────►├── action=join ──────────────► enqueue，回傳號碼與前面幾組 │
+ │ ◄── 候位票（每 5 秒更新）───┤── action=status ────────────► positionOf                  │
+ │                             │                staff.html ◄──────── 輸入員工密碼 ─────────┤
+ │                             │                              │◄── action=queue ───────────┤ 看到 queue
+ │                             │                              │◄── action=notify ──────────┤ 按「通知」
+ │ ◄════ Gmail 候位通知信 ═════════════════════════════════════╡ MailApp 寄信，狀態→notified │
+ │ 到櫃台報到                  │                              │◄── action=seat ────────────┤ 按「入座」
+ │                             │                              │ remove，移出 queue          │</code></pre>
+
+  <h3>3. Queue 資料結構（自己寫）</h3>
+  <p>Queue 是一個 JSON 陣列，依加入順序排列，越前面越早候位。整個陣列以字串存在 PropertiesService 的 <code>queue</code> 這個 key 裡，另外用 <code>next_id</code> 記下一個號碼。</p>
+<pre><code>[
+  {"id": 7, "name": "王小明", "gender": "男", "email": "a@gmail.com", "party_size": 2,
+   "status": "waiting",  "created_at": "2026-10-23 12:00:05", "notified_at": ""},
+  {"id": 8, "name": "李小華", "gender": "女", "email": "b@gmail.com", "party_size": 4,
+   "status": "notified", "created_at": "2026-10-23 12:03:40", "notified_at": "2026-10-23 12:20:00"}
+]</code></pre>
+  <div class="table-wrap"><table>
+    <tr><th>方法</th><th>作用</th><th>說明</th></tr>
+    <tr><td>enqueue(item)</td><td>加入候位</td><td>取 next_id 當號碼，push 到陣列尾端</td></tr>
+    <tr><td>find(id)</td><td>找某號碼</td><td>回傳該筆資料</td></tr>
+    <tr><td>positionOf(id)</td><td>前面還有幾組</td><td>該號碼在陣列中的索引值</td></tr>
+    <tr><td>update(id, fields)</td><td>更新狀態</td><td>通知後把 status 改成 notified</td></tr>
+    <tr><td>remove(id, reason)</td><td>移出隊伍</td><td>splice 掉該筆，並把當日 seated / cancelled 計數 +1</td></tr>
+    <tr><td>stats()</td><td>今日統計</td><td>回傳 {seated, cancelled}</td></tr>
+  </table></div>
+  <p>狀態只有兩種留在 queue 裡：waiting（等候中）、notified（已通知）。入座或取消的直接移出，不佔隊伍。</p>
+  <p>限制：PropertiesService 一個值最多 9KB，約可放 50 組；超過時 enqueue 會回「候位已滿」。這對課堂測試足夠，若要更大可改用多個 key 或外部儲存（加分題）。</p>
+
+  <h3>4. API（前端用 fetch 呼叫 Apps Script，全部回 JSON）</h3>
+  <div class="table-wrap"><table>
+    <tr><th>action</th><th>方法</th><th>誰用</th><th>參數</th><th>功能</th></tr>
+    <tr><td>count</td><td>GET</td><td>顧客頁</td><td>無</td><td>目前候位組數</td></tr>
+    <tr><td>status</td><td>GET</td><td>顧客頁</td><td>id</td><td>某號碼的狀態、前面幾組</td></tr>
+    <tr><td>join</td><td>POST</td><td>顧客頁</td><td>name, gender, email, party_size</td><td>enqueue，回傳號碼</td></tr>
+    <tr><td>leave</td><td>POST</td><td>顧客頁</td><td>id</td><td>顧客自行取消（remove）</td></tr>
+    <tr><td>queue</td><td>GET</td><td>員工頁</td><td>key</td><td>整個 queue 與今日入座 / 取消數</td></tr>
+    <tr><td>notify</td><td>POST</td><td>員工頁</td><td>key, id</td><td>寄通知信，狀態改 notified</td></tr>
+    <tr><td>seat</td><td>POST</td><td>員工頁</td><td>key, id</td><td>入座，remove</td></tr>
+    <tr><td>cancel</td><td>POST</td><td>員工頁</td><td>key, id</td><td>員工取消，remove</td></tr>
+    <tr><td>log</td><td>GET</td><td>員工</td><td>key</td><td>最近 40 筆事件紀錄（候位、通知、入座、取消），寫報告用</td></tr>
+    <tr><td>reset</td><td>GET</td><td>員工</td><td>key</td><td>清空所有資料（測試完用）</td></tr>
+  </table></div>
+  <p>員工操作都要帶 <code>key</code>（員工密碼），後端核對 Code.gs 裡的 <code>STAFF_KEY</code>。POST 不設定 Content-Type（瀏覽器預設 text/plain），因為 Apps Script 不支援 CORS preflight。</p>
+
+  <h3>5. 示範模式</h3>
+  <p><code>app.js</code> 的 <code>API_URL</code> 留空時為示範模式：前端自己用 localStorage 跑一個一樣的 Queue，可以先把畫面與流程走一遍，但不會跨裝置、也不會真的寄信。部署好後端並填入 API_URL 後才是正式模式。</p>
+
+  <h2 id="deploy">三、部署步驟</h2>
+  <h3>A. 後端（Google Apps Script）</h3>
+  <ol>
+    <li>用自己的 Google 帳號打開 <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> → 「新專案」。</li>
+    <li>把範例 <a href="downloads/Code.gs" download>Code.gs</a> 的內容全部貼進去取代原本內容，<strong>把 STAFF_KEY 改成自己的員工密碼</strong>，專案命名為「候位系統」。</li>
+    <li>右上角「部署」→「新增部署作業」→ 類型選「網頁應用程式」。執行身分：<strong>我</strong>　／　誰可以存取：<strong>所有人</strong>。</li>
+    <li>第一次會要求授權（代替你寄信），按允許。</li>
+    <li>複製「網頁應用程式網址」（結尾是 <code>/exec</code>）。</li>
+    <li>在瀏覽器直接打開 <code>該網址?action=count</code>，看到 <code>{"waiting":0}</code> 就代表後端成功。</li>
+    <li>之後每次修改 Code.gs，要「部署」→「管理部署作業」→ 編輯 → 版本選「新版本」→ 部署，網址才會更新內容。</li>
+  </ol>
+  <h3>B. 前端（GitHub Pages）</h3>
+  <ol>
+    <li>在 GitHub 建立公開儲存庫 <code>你的帳號.github.io</code>（已經有的就直接用）。</li>
+    <li>把範例的 waitlist 資料夾（<a href="waitlist/index.html" download>index.html</a>、<a href="waitlist/staff.html" download>staff.html</a>、<a href="waitlist/app.js" download>app.js</a>、<a href="waitlist/waitlist.css" download>waitlist.css</a>）放進去。</li>
+    <li>把 app.js 的 <code>API_URL</code> 改成步驟 A 的網址，<code>RESTAURANT</code> 改成自己的餐廳名稱。</li>
+    <li>push 上去，約一分鐘後 <code>https://你的帳號.github.io/waitlist/</code> 就是顧客頁，<code>/waitlist/staff.html</code> 是員工頁。</li>
+    <li>用作業二的程式把顧客頁網址做成 QR Code：
+<pre><code>python qr_web.py make --url https://你的帳號.github.io/waitlist/ --out qr_waitlist.png --label "海大餐廳 候位"</code></pre></li>
+  </ol>
+
+  <h2 id="func">四、程式功能要求</h2>
+  <div class="table-wrap"><table>
+    <tr><th>編號</th><th>要求</th><th>必要 / 加分</th></tr>
+    <tr><td>F1</td><td>顧客頁與員工頁放在自己的 GitHub Pages 上，用網址就能開</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F2</td><td>顧客掃 QR Code 進入候位網頁（手機實測）</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F3</td><td>候位表單：姓名、性別、E-mail 必填，資料 enqueue 進自己寫的 Queue 並取得候位號碼</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F4</td><td>顧客看得到目前候位組數與自己前面還有幾組，且會自動更新</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F5</td><td>員工輸入密碼後看到候位 queue（號碼、姓名、性別、人數、E-mail、候位時間、狀態）</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F6</td><td>員工按「通知」，後端自動從 Gmail 寄 E-mail 給該顧客，顧客端狀態變為「已通知」</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F7</td><td>員工可「入座」「取消」，該組移出 queue，後面的人前面組數跟著減少</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F8</td><td>員工密碼錯誤時不能看到 queue、不能操作</td><td><span class="tag">必要</span></td></tr>
+    <tr><td>F9</td><td>顧客可自行取消候位</td><td><span class="tag plus">加分</span></td></tr>
+    <tr><td>F10</td><td>統計功能：今日候位總數、平均等候時間、放棄率等</td><td><span class="tag plus">加分</span></td></tr>
+    <tr><td>F11</td><td>Queue 改用多個 key 或其他儲存方式突破 50 組限制，或支援多桌型（2 人桌、4 人桌）分流</td><td><span class="tag plus">加分</span></td></tr>
+  </table></div>
+
+  <h2 id="report">五、報告要求</h2>
+  <p><strong>報告使用 Word、PDF 或 Markdown 皆可，必須包含以下三部分，缺一項即扣分。</strong></p>
+  <h3>1. 報告題目</h3>
+  <p>自訂一個能表達本次作業內容的題目，例如：「以 GitHub Pages 與 Google Apps Script 實作海大餐廳線上候位系統」。不可直接寫「作業三」或「候位系統報告」。</p>
+  <h3>2. 目的</h3>
+  <p>說明傳統紙本或現場叫號候位有什麼問題、本系統如何解決（顧客不必在門口等、輪到時自動通知）、為什麼選擇 GitHub Pages 加 Apps Script 這種不用架伺服器與資料庫的做法，以及預期達成的效果。建議 150 到 250 字。</p>
+  <h3>3. 報告內容項目（全部必須依實際執行結果撰寫）</h3>
+  <div class="warn">以下每一項都要有自己實際跑出來的證據（網頁截圖、手機截圖、收到的 E-mail 截圖、<code>?action=log</code> 的輸出）。<strong>抄範例、憑想像寫的結果一律不計分。</strong></div>
+  <div class="table-wrap"><table>
+    <tr><th style="width:26%">項目</th><th>必須包含的內容</th></tr>
+    <tr><td>3.1 執行環境</td><td>使用的 GitHub 帳號與網站網址、Google 帳號（可部分遮蔽）、測試用手機型號與數量、瀏覽器</td></tr>
+    <tr><td>3.2 系統規劃</td><td>自己畫的架構圖與流程圖、API 清單（可依本說明修改，但要和自己的程式一致）</td></tr>
+    <tr><td>3.3 Queue 設計說明</td><td>自己的 Queue 用什麼資料結構、enqueue / remove / positionOf 怎麼寫、資料存在哪裡、有什麼限制。要貼自己的程式碼片段並逐段說明</td></tr>
+    <tr><td>3.4 部署過程</td><td>Apps Script 部署設定截圖（執行身分、存取權限）、<code>?action=count</code> 的結果、GitHub Pages 上線截圖</td></tr>
+    <tr><td>3.5 前後端溝通說明</td><td>前端三個檔案各做什麼、fetch 如何呼叫後端、為什麼 POST 不能設定 Content-Type</td></tr>
+    <tr><td>3.6 顧客端實測</td><td>手機掃 QR Code 進入、填表、取得號碼、看到前面幾組的截圖，至少 3 組不同顧客（可由同學手機扮演）</td></tr>
+    <tr><td>3.7 員工端實測</td><td>員工登入、候位 queue 表格截圖，至少含 3 組候位；密碼錯誤時的畫面</td></tr>
+    <tr><td>3.8 通知功能實測</td><td>員工按「通知」後的提示訊息、顧客手機收到的 E-mail 截圖、顧客端狀態變為「已通知」的截圖</td></tr>
+    <tr><td>3.9 入座 / 取消實測</td><td>入座後 queue 減少、後面顧客的「前面幾組」跟著減少的前後對照截圖</td></tr>
+    <tr><td>3.10 事件紀錄</td><td><code>?action=log&amp;key=密碼</code> 的完整輸出，說明這次測試共幾組候位、幾次通知、幾組入座、幾組取消</td></tr>
+    <tr><td>3.11 錯誤與排除</td><td>實際遇到的錯誤（例如 Apps Script 未授權、部署權限設成「只有我」導致前端讀不到、改了 Code.gs 忘記建新版本、填錯 API_URL）、原因與解法。若完全沒遇到錯誤，請故意把 API_URL 改錯一個字再操作，記錄系統的反應</td></tr>
+    <tr><td>3.12 結論與心得</td><td>系統是否達成目的、若真的放在餐廳使用還缺什麼（例如防止重複取號、資料隱私、50 組上限）、學到什麼</td></tr>
+  </table></div>
+
+  <h2 id="submit">六、繳交內容</h2>
+  <ol>
+    <li>GitHub 儲存庫網址與 GitHub Pages 網址（顧客頁、員工頁）</li>
+    <li>前端程式（waitlist 資料夾）與後端 Code.gs，<strong>STAFF_KEY 與 API_URL 繳交時請改成假的</strong></li>
+    <li>產生的顧客端 QR Code 圖片</li>
+    <li>報告檔（Word / PDF / Markdown）</li>
+    <li><code>?action=log</code> 輸出存成的文字檔（至少包含 3 組候位、1 次通知、1 次入座）</li>
+  </ol>
+  <p>壓縮成一個檔案，檔名：<code>學號_姓名_候位系統.zip</code></p>
+
+  <h2 id="grade">七、評分標準</h2>
+  <div class="table-wrap"><table>
+    <tr><th>項目</th><th style="width:20%">配分</th></tr>
+    <tr><td>程式功能 F1 到 F8</td><td>40</td></tr>
+    <tr><td>報告題目與目的清楚</td><td>10</td></tr>
+    <tr><td>報告內容項目 3.1 到 3.12 完整且為實際結果</td><td>40</td></tr>
+    <tr><td>程式碼可讀性、註解、不含真實密碼</td><td>10</td></tr>
+    <tr><td>加分功能 F9 / F10 / F11</td><td>最多 +10</td></tr>
+  </table></div>
+
+  <h2 id="notes">八、注意事項</h2>
+  <ul>
+    <li>Apps Script 部署成「所有人可存取」後，任何知道網址的人都能呼叫 API。員工密碼不要用預設的 <code>staff</code>，作業結束後請到「部署」把它封存。</li>
+    <li>Queue 裡有同學的 E-mail，作業結束後請呼叫 <code>?action=reset&amp;key=密碼</code> 清空。</li>
+    <li>測試用的顧客 E-mail 請用自己或同組同學的信箱，不要寄給不相關的人。</li>
+    <li>MailApp 一般 Gmail 帳號每天只能寄 100 封，測試時不要狂按「通知」。</li>
+  </ul>
+
+  <div class="card qr" style="margin-top:30px">
+    <img src="qr_waitlist.png" alt="指向顧客候位頁的 QR Code">
+    <p>範例：這張 QR Code 指向本站的顧客候位頁（示範模式）。</p>
+  </div>
+
+  <p>
+    <a class="btn secondary" href="downloads/Code.gs" download>下載 Code.gs</a>
+    <a class="btn secondary" href="downloads/waitlist_frontend.zip" download>下載前端 waitlist 資料夾 (zip)</a>
+    <a class="btn secondary" href="downloads/作業說明_候位系統.docx" download>下載 Word 版說明</a>
+  </p>
+</main>
+<footer><a href="index.html">回首頁</a> · <a href="gmail.html">作業一</a> · <a href="qrcode.html">作業二</a></footer>
+</body>
+</html>

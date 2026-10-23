@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>候位管理</title>
+<link rel="stylesheet" href="waitlist.css">
+</head>
+<body>
+<div class="wrap wide">
+  <h1 id="title">候位管理</h1>
+  <div id="demo-banner" class="banner" hidden>示範模式：尚未設定後端網址，資料只存在這台瀏覽器，「通知」不會真的寄信。</div>
+
+  <form id="login" class="card narrow" hidden>
+    <label for="key">員工密碼</label>
+    <input id="key" type="password" required autocomplete="current-password">
+    <p id="login-error" class="err" hidden></p>
+    <p class="actions"><button class="btn" type="submit">登入</button></p>
+  </form>
+
+  <div id="panel" hidden>
+    <p class="sub">目前候位 <b id="count">…</b> 組　<a href="index.html" target="_blank">顧客端</a>　<a href="#" id="logout">登出</a>　<span class="muted">每 10 秒自動更新</span></p>
+    <div id="flash" class="card flash" hidden></div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>號碼</th><th>姓名</th><th>性別</th><th>人數</th><th>E-mail</th><th>候位時間</th><th>狀態</th><th>操作</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="muted">今日已入座 <span id="seated">0</span> 組、取消 <span id="cancelled">0</span> 組。按「通知」會寄 E-mail 給顧客並將狀態改為已通知；「入座」與「取消」會把該組移出 queue。</p>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  $("title").textContent = RESTAURANT + " 候位管理";
+  showDemoBanner();
+  const getKey = () => { try { return sessionStorage.getItem("waitlist_staff_key"); } catch (e) { return null; } };
+  const setKey = k => { try { k ? sessionStorage.setItem("waitlist_staff_key", k) : sessionStorage.removeItem("waitlist_staff_key"); } catch (e) {} };
+
+  function flash(msg, isErr) { const f = $("flash"); f.textContent = msg; f.className = "card flash" + (isErr ? " error" : ""); f.hidden = false; }
+
+  async function load() {
+    const key = getKey();
+    if (!key) { $("panel").hidden = true; $("login").hidden = false; return; }
+    let d;
+    try { d = await api("queue", { key }); } catch (e) { d = { error: e.message }; }
+    if (d.error === "unauthorized") { setKey(null); $("login-error").textContent = "密碼錯誤"; $("login-error").hidden = false; return load(); }
+    if (d.error) { flash("讀取失敗：" + d.error, true); return; }
+    $("login").hidden = true; $("panel").hidden = false;
+    $("count").textContent = d.queue.length; $("seated").textContent = d.seated; $("cancelled").textContent = d.cancelled;
+    $("rows").innerHTML = d.queue.length ? d.queue.map(r => `
+      <tr>
+        <td><b>${esc(r.id)}</b></td><td>${esc(r.name)}</td><td>${esc(r.gender)}</td><td>${esc(r.party_size)}</td>
+        <td>${esc(r.email)}</td><td>${esc(String(r.created_at).slice(11))}</td>
+        <td><span class="tag ${esc(r.status)}">${r.status === "notified" ? "已通知 " + esc(String(r.notified_at).slice(11)) : "等候中"}</span></td>
+        <td class="ops">
+          <button class="btn small" data-act="notify" data-id="${esc(r.id)}">通知</button>
+          <button class="btn small green" data-act="seat" data-id="${esc(r.id)}">入座</button>
+          <button class="btn small grey" data-act="cancel" data-id="${esc(r.id)}">取消</button>
+        </td>
+      </tr>`).join("") : `<tr><td colspan="8" class="muted">目前沒有候位</td></tr>`;
+  }
+
+  $("login").addEventListener("submit", ev => { ev.preventDefault(); setKey($("key").value); $("login-error").hidden = true; load(); });
+  $("logout").addEventListener("click", ev => { ev.preventDefault(); setKey(null); load(); });
+
+  $("rows").addEventListener("click", async ev => {
+    const b = ev.target.closest("button[data-act]"); if (!b) return;
+    const { act, id } = b.dataset;
+    if (act === "cancel" && !confirm(`取消 ${id} 號？`)) return;
+    b.disabled = true;
+    try {
+      const d = await api(act, { id, key: getKey() });
+      if (d.error) throw new Error(d.error);
+      if (act === "notify") flash(`${id} 號：${d.detail || "已通知"}`);
+      else flash(`${id} 號已${act === "seat" ? "入座" : "取消"}`);
+    } catch (e) { flash(`${id} 號操作失敗：${e.message}`, true); }
+    load();
+  });
+
+  load();
+  setInterval(() => { if (getKey()) load(); }, 10000);
+})();
+</script>
+</body>
+</html>
