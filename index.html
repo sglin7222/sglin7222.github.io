@@ -3,138 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>期中作業說明</title>
-<meta name="description" content="期中作業說明：Gmail 自動讀寫 25 分、QR Code 導引網頁 25 分、海大餐廳候位系統 50 分">
+<title>課程首頁</title>
+<meta name="description" content="課程作業入口">
 <link rel="stylesheet" href="style.css">
-<style>
-  .score { font-size: 34px; font-weight: 800; color: var(--accent); line-height: 1; }
-  .score small { font-size: 15px; font-weight: 600; color: var(--muted); margin-left: 4px; }
-  .card h3 { margin-top: 6px; }
-  td.total, tr.total td { font-weight: 700; background: var(--accent-soft); }
-</style>
 </head>
 <body>
 <header class="top"><div class="inner">
-  <a class="brand" href="index.html">期中作業</a>
-  <nav><a href="gmail.html">作業一 Gmail</a> &nbsp;·&nbsp; <a href="qrcode.html">作業二 QR Code</a> &nbsp;·&nbsp; <a href="waitlist.html">作業三 候位系統</a></nav>
+  <a class="brand" href="index.html">課程首頁</a>
+  <nav><a href="ds_midterm.html">期中作業</a></nav>
 </div></header>
 
 <main>
-  <h1>期中作業說明</h1>
-  <p class="subtitle">期中成績由三份作業組成，總分 100 分。三份作業環環相扣：作業一學會用程式寄信，作業二學會用 QR Code 把人導到網頁，作業三把兩者整合成一套放在 GitHub 上的餐廳候位系統。繳交期限與方式依課堂公告。</p>
+  <h1>課程首頁</h1>
+  <p class="subtitle">作業說明與範例程式下載。</p>
 
-  <div class="card toc">
-    <a href="#overview">配分總覽</a> · <a href="#summary">各作業摘要</a> · <a href="#rubric">評分明細</a> · <a href="#report">報告共同規定</a> · <a href="#submit">繳交方式</a> · <a href="#notes">安全與注意事項</a> · <a href="#downloads">下載</a>
-  </div>
-
-  <h2 id="overview">配分總覽</h2>
   <div class="grid">
     <div class="card">
-      <div class="score">25<small>分</small></div>
-      <h3>作業一：Gmail 自動讀寫程式</h3>
-      <p>以 16 字元應用程式密碼登入 Gmail，透過 IMAP 讀信、SMTP 寄信，並驗證寄出的信確實收到。</p>
-      <a class="btn" href="gmail.html">看作業說明</a>
-      <a class="btn secondary" href="downloads/gmail_auto.py" download>下載範例程式</a>
-    </div>
-    <div class="card">
-      <div class="score">25<small>分</small></div>
-      <h3>作業二：用 QR Code 導引到網頁</h3>
-      <p>把網址做成 QR Code 圖片，自己架一個網頁讓手機掃描進入，並記錄每一次掃描連線。</p>
-      <a class="btn" href="qrcode.html">看作業說明</a>
-      <a class="btn secondary" href="downloads/qr_web.py" download>下載範例程式</a>
-    </div>
-    <div class="card">
-      <div class="score">50<small>分</small></div>
-      <h3>作業三：海大餐廳候位系統</h3>
-      <p>整合前兩份作業：顧客掃 QR Code 進入 GitHub Pages 候位頁填資料取號，員工在管理頁看 queue、按通知自動寄 Gmail。候位 Queue 自己寫，放在 Google Apps Script，不用架伺服器、不用資料庫。</p>
-      <a class="btn" href="waitlist.html">看作業說明</a>
-      <a class="btn secondary" href="waitlist/index.html">試玩顧客頁</a>
+      <h3 style="margin-top:0">期中作業說明</h3>
+      <p>作業一 Gmail 自動讀寫 25 分、作業二 QR Code 導引網頁 25 分、作業三 海大餐廳候位系統 50 分。配分、評分明細、報告規定與所有下載都在這一頁。</p>
+      <a class="btn" href="ds_midterm.html">進入期中作業說明</a>
     </div>
   </div>
 
-  <h2 id="summary">各作業摘要</h2>
-  <h3>作業一：Gmail 自動讀寫程式（25 分）</h3>
-  <ul>
-    <li>撰寫 Python 程式，使用 Google 帳戶的 16 字元應用程式密碼登入 Gmail。</li>
-    <li>透過 IMAP 讀取收件匣最新 N 封信，透過 SMTP 寄信給指定收件者，寄信後再讀信驗證確實收到。</li>
-    <li>帳號密碼不得寫死在程式碼中；登入失敗要有清楚的錯誤訊息。</li>
-    <li>範例程式 <code>gmail_auto.py</code> 只用 Python 標準函式庫。</li>
-  </ul>
-  <h3>作業二：用 QR Code 導引到網頁（25 分）</h3>
-  <ul>
-    <li>撰寫 Python 程式，將任一網址轉成 QR Code 圖片，並自行解碼驗證內容。</li>
-    <li>在自己的電腦架一個含學號姓名的網頁，產生指向它的 QR Code，至少讓 2 台手機掃描成功並記錄每次連線。</li>
-    <li>範例程式 <code>qr_web.py</code>，需安裝 qrcode 與 opencv-python-headless。</li>
-  </ul>
-  <h3>作業三：海大餐廳候位系統（50 分）</h3>
-  <ul>
-    <li>前端（顧客候位頁、員工管理頁）放在自己的 GitHub Pages，後端用 Google Apps Script，不用架伺服器、不用安裝套件、不用資料庫。</li>
-    <li>候位 Queue 自己寫：JSON 陣列存在 Apps Script 的 PropertiesService，實作 enqueue、positionOf、remove 等方法。</li>
-    <li>顧客掃 QR Code 進入網頁，填姓名、性別、E-mail 取號，看到前面還有幾組；員工輸入密碼看 queue，按「通知」自動從 Gmail 寄信，按「入座」「取消」移出 queue。</li>
-    <li>範例：前端 4 個檔案（index.html、staff.html、app.js、waitlist.css）與後端 Code.gs。</li>
-  </ul>
-
-  <h2 id="rubric">評分明細</h2>
-  <p>每份作業各自以 100 分評分（程式功能 40、報告題目與目的 10、報告內容項目 40、程式碼品質 10，加分功能最多 +10），再依配分比例換算成期中成績：</p>
-  <div class="table-wrap"><table>
-    <tr><th>評分項目</th><th>作業一（25 分）</th><th>作業二（25 分）</th><th>作業三（50 分）</th><th>小計</th></tr>
-    <tr><td>程式功能（必要功能全部完成）</td><td>10</td><td>10</td><td>20</td><td class="total">40</td></tr>
-    <tr><td>報告題目與目的清楚</td><td>2.5</td><td>2.5</td><td>5</td><td class="total">10</td></tr>
-    <tr><td>報告內容項目完整且為實際結果</td><td>10</td><td>10</td><td>20</td><td class="total">40</td></tr>
-    <tr><td>程式碼可讀性、註解、不含密碼</td><td>2.5</td><td>2.5</td><td>5</td><td class="total">10</td></tr>
-    <tr class="total"><td>合計</td><td>25</td><td>25</td><td>50</td><td>100</td></tr>
-    <tr><td>加分功能（上限）</td><td>+2.5</td><td>+2.5</td><td>+5</td><td>+10</td></tr>
-  </table></div>
-  <p>期中總分含加分以 100 分為上限。</p>
-
-  <h2 id="report">報告共同規定</h2>
-  <div class="card">
-    <p>三份作業都要交程式與報告，報告必須包含以下三部分，缺一項即扣分：</p>
-    <ol>
-      <li><strong>報告題目</strong>：自訂一個能表達作業內容的題目，不可只寫「作業一」。</li>
-      <li><strong>目的</strong>：說明程式要解決什麼問題、預期達成什麼效果（作業一、二 100 到 200 字，作業三 150 到 250 字）。</li>
-      <li><strong>報告內容項目</strong>：依各作業說明列出的項目逐項撰寫，<strong>每一項都要附上自己實際執行的證據</strong>（截圖、程式產生的紀錄檔、收到的 E-mail）。抄範例、憑想像寫的結果一律不計分。</li>
-    </ol>
-    <p>範例程式每次執行都會在 <code>results/</code> 目錄留下這次的真實結果，作業三則可用 <code>?action=log</code> 取得事件紀錄，寫報告時直接引用。</p>
-  </div>
-
-  <h2 id="submit">繳交方式</h2>
-  <ul>
-    <li>每份作業各自壓縮成一個 zip，檔名依各作業說明：<code>學號_姓名_gmail作業.zip</code>、<code>學號_姓名_qrcode作業.zip</code>、<code>學號_姓名_候位系統.zip</code>。</li>
-    <li>作業三另附 GitHub 儲存庫網址與 GitHub Pages 網址。</li>
-    <li>報告格式 Word、PDF 或 Markdown 皆可。</li>
-  </ul>
-
-  <h2 id="notes">安全與注意事項</h2>
-  <div class="warn">
-    <ul style="margin:0">
-      <li>應用程式密碼等同帳號密碼，<strong>絕對不可</strong>出現在程式碼、報告、截圖或任何繳交檔案中；作業結束後請到 Google 帳戶刪除。</li>
-      <li>作業三的 <code>STAFF_KEY</code> 與 <code>API_URL</code> 繳交時請改成假的；Apps Script 部署作業用完請封存，Queue 用 <code>?action=reset</code> 清空。</li>
-      <li>寄信與 QR Code 測試只能針對自己、同組同學或公開合法的網站，不可對外亂寄或導向有害內容。</li>
-      <li>本機網站與候位系統只在測試時開啟，測試完請關閉。</li>
-    </ul>
-  </div>
-
-  <h2 id="downloads">下載</h2>
-  <div class="table-wrap"><table>
-    <tr><th>檔案</th><th>說明</th></tr>
-    <tr><td><a href="downloads/期中作業說明.docx" download>期中作業說明.docx</a> / <a href="downloads/期中作業說明.md" download>.md</a></td><td>本頁的 Word 與 Markdown 版</td></tr>
-    <tr><td><a href="downloads/gmail_auto.py" download>gmail_auto.py</a></td><td>作業一範例程式（只用 Python 標準函式庫）</td></tr>
-    <tr><td><a href="downloads/config.example.json" download>config.example.json</a></td><td>作業一設定檔範本，複製成 config.json 後填入帳號與應用程式密碼</td></tr>
-    <tr><td><a href="downloads/作業說明.docx" download>作業說明.docx</a> / <a href="downloads/作業說明.md" download>.md</a></td><td>作業一說明文件</td></tr>
-    <tr><td><a href="downloads/qr_web.py" download>qr_web.py</a></td><td>作業二範例程式（需 qrcode、opencv-python-headless）</td></tr>
-    <tr><td><a href="downloads/作業說明_QRCode.docx" download>作業說明_QRCode.docx</a> / <a href="downloads/作業說明_QRCode.md" download>.md</a></td><td>作業二說明文件</td></tr>
-    <tr><td><a href="downloads/Code.gs" download>Code.gs</a></td><td>作業三後端（Google Apps Script，含自己寫的 Queue），貼到 script.google.com 新專案</td></tr>
-    <tr><td><a href="downloads/waitlist_frontend.zip" download>waitlist_frontend.zip</a></td><td>作業三前端（index.html、staff.html、app.js、waitlist.css），放到自己的 GitHub Pages</td></tr>
-    <tr><td><a href="downloads/作業說明_候位系統.docx" download>作業說明_候位系統.docx</a> / <a href="downloads/作業說明_候位系統.md" download>.md</a></td><td>作業三說明文件</td></tr>
-  </table></div>
-
-  <h2>掃描進入本頁</h2>
+  <h2>掃描進入本站</h2>
   <div class="card qr">
     <img src="qr_site.png" alt="指向 https://sglin7222.github.io/ 的 QR Code">
-    <p>這張 QR Code 就是用作業二的範例程式產生的，指向 <code>https://sglin7222.github.io/</code>。</p>
+    <p>指向 <code>https://sglin7222.github.io/</code>，用作業二的範例程式產生。</p>
   </div>
 </main>
-<footer>期中作業說明 · 範例程式與說明以 Python 3.12 測試</footer>
+<footer><a href="ds_midterm.html">期中作業說明</a></footer>
 </body>
 </html>
